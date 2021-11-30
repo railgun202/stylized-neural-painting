@@ -60,6 +60,7 @@ class Imitator():
         self.vis_dir = args.vis_dir
 
         # define the loss functions
+        # LG(x) = Ex∼u(x){ks − sˆk22 + kα − αˆk22}, (4)
         self._pxl_loss = loss.PixelLoss(p=2)
 
         self.VAL_ACC = np.array([], np.float32)
