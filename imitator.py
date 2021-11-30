@@ -38,6 +38,7 @@ class Imitator():
             self.net_G.parameters(), lr=self.lr, betas=(0.9, 0.999))
 
         # define lr schedulers
+        # 学習率を学習の途中で変化させる。StepLR(optimizer：ラップ対象のオプティマイザ, step_size：更新タイミングのエポック数, gamma：更新率)
         self.exp_lr_scheduler_G = lr_scheduler.StepLR(
             self.optimizer_G, step_size=100, gamma=0.1)
 
