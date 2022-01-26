@@ -49,7 +49,7 @@ class Renderer():
             self.brush_small_horizontal = cv2.imread(
                 r'./brushes/small_horizontal_spray.png', cv2.IMREAD_GRAYSCALE)
             self.brush_large_vertical = cv2.imread(
-                r'./brushes/large_vertical_spray.png.png', cv2.IMREAD_GRAYSCALE)
+                r'./brushes/large_vertical_spray.png', cv2.IMREAD_GRAYSCALE)
             self.brush_large_horizontal = cv2.imread(
                 r'./brushes/large_horizontal_spray.png', cv2.IMREAD_GRAYSCALE)
         elif self.renderer in ['rectangle']:
