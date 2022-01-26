@@ -287,7 +287,7 @@ def create_transformed_brush(brush, canvas_w, canvas_h,
     colormap = np.zeros([brush.shape[0], brush.shape[1], 3], np.float32)
     for ii in range(brush.shape[0]):
         t = ii / brush.shape[0]
-        this_color = [(1 - t) * R0 + t * R2, # ここ変更（G0,B0→R0, G2,B2→R2）そして戻す(12:07)
+        this_color = [(1 - t) * R0 + t * R2,
                       (1 - t) * G0 + t * G2,
                       (1 - t) * B0 + t * B2]
         colormap[ii, :, :] = np.expand_dims(this_color, axis=0)
