@@ -43,15 +43,14 @@ class Renderer():
             self.d_shape = 5
             self.d_color = 6
             self.d_alpha = 1
-            # brush_fromweb2_~ → ~_spray に変更
             self.brush_small_vertical = cv2.imread(
-                r'./brushes/small_vertical_spray.png', cv2.IMREAD_GRAYSCALE)
+                r'./brushes/brush_fromweb2_small_vertical.png', cv2.IMREAD_GRAYSCALE)
             self.brush_small_horizontal = cv2.imread(
-                r'./brushes/small_horizontal_spray.png', cv2.IMREAD_GRAYSCALE)
+                r'./brushes/brush_fromweb2_small_horizontal.png', cv2.IMREAD_GRAYSCALE)
             self.brush_large_vertical = cv2.imread(
-                r'./brushes/large_vertical_spray.png', cv2.IMREAD_GRAYSCALE)
+                r'./brushes/brush_fromweb2_large_vertical.png', cv2.IMREAD_GRAYSCALE)
             self.brush_large_horizontal = cv2.imread(
-                r'./brushes/large_horizontal_spray.png', cv2.IMREAD_GRAYSCALE)
+                r'./brushes/brush_fromweb2_large_horizontal.png', cv2.IMREAD_GRAYSCALE)
         elif self.renderer in ['rectangle']:
             self.d = 9 # xc, yc, w, h, theta, R, G, B, A
             self.d_shape = 5
@@ -90,9 +89,9 @@ class Renderer():
         cx = (index % self.CANVAS_WIDTH) / self.CANVAS_WIDTH
 
         if self.renderer in ['markerpen']:
-            # x0, y0, x1, y1, x2, y2, radius0, radius2, R, G, B, A
-            x0, y0, x1, y1, x2, y2 = cx, cy, cx, cy, cx, cy
-            x = [x0, y0, x1, y1, x2, y2]
+            # x0, y0, x1, y1, x2, y2, x3, y3, radius0, radius2, R, G, B, A ###
+            x0, y0, x1, y1, x2, y2 ,x3, y3 = cx, cy, cx, cy, cx, cy, cx, cy ###
+            x = [x0, y0, x1, y1, x2, y2, x3, y3] ###
             r = _random_floats(0.1, 0.25, 2)
             color = img[int(cy*map_h), int(cx*map_w), :].tolist()
             alpha = _random_floats(0.8, 0.98, 1)
@@ -128,7 +127,7 @@ class Renderer():
     def check_stroke(self):
         r_ = 1.0
         if self.renderer in ['markerpen', 'watercolor']:
-            r_ = max(self.stroke_params[6], self.stroke_params[7])
+            r_ = max(self.stroke_params[8], self.stroke_params[7]) ###
         elif self.renderer in ['oilpaintbrush']:
             r_ = max(self.stroke_params[2], self.stroke_params[3])
         elif self.renderer in ['rectangle']:
@@ -182,7 +181,9 @@ class Renderer():
             t = i * tmp
             x = (int)((1 - t) * (1 - t) * x0 + 2 * t * (1 - t) * x1 + t * t * x2)
             y = (int)((1 - t) * (1 - t) * y0 + 2 * t * (1 - t) * y1 + t * t * y2)
+            # radius = (int)((1 - t) * radius0 + t * radius2)
             radius = (int)((1 - t) * radius0 + t * radius2)
+
             color = ((1-t)*R0*255 + t*R2*255,
                      (1-t)*G0*255 + t*G2*255,
                      (1-t)*B0*255 + t*B2*255)
@@ -190,8 +191,8 @@ class Renderer():
             cv2.circle(self.stroke_alpha_map, (x, y), radius, alpha, -1, lineType=cv2.LINE_AA)
 
         if not self.train:
-            self.foreground = cv2.dilate(self.foreground, np.ones([2, 2]))
-            self.stroke_alpha_map = cv2.erode(self.stroke_alpha_map, np.ones([2, 2]))
+            self.foreground = cv2.dilate(self.foreground, np.ones([2, 2])) # 画像の拡張処理
+            self.stroke_alpha_map = cv2.erode(self.stroke_alpha_map, np.ones([2, 2])) # 画像の分解処理
 
         self.foreground = np.array(self.foreground, dtype=np.float32)/255.
         self.stroke_alpha_map = np.array(self.stroke_alpha_map, dtype=np.float32)/255.
@@ -241,17 +242,20 @@ class Renderer():
 
     def _draw_markerpen(self):
 
-        # x0, y0, x1, y1, x2, y2, radius0, radius2, R, G, B, A
-        x0, y0, x1, y1, x2, y2, radius, _ = self.stroke_params[0:8]
+        # x0, y0, x1, y1, x2, y2,追加(x3, y3) radius0, radius2, R, G, B, A
+        x0, y0, x1, y1, x2, y2, x3, y3, radius, _ = self.stroke_params[0:10] ###
         R0, G0, B0, ALPHA = self.stroke_params[8:]
         x1 = x0 + (x2 - x0) * x1
         y1 = y0 + (y2 - y0) * y1
         x0 = _normalize(x0, self.CANVAS_WIDTH)
         x1 = _normalize(x1, self.CANVAS_WIDTH)
         x2 = _normalize(x2, self.CANVAS_WIDTH)
+        x3 = _normalize(x3, self.CANVAS_WIDTH) ###
         y0 = _normalize(y0, self.CANVAS_WIDTH)
         y1 = _normalize(y1, self.CANVAS_WIDTH)
         y2 = _normalize(y2, self.CANVAS_WIDTH)
+        y3 = _normalize(y3, self.CANVAS_WIDTH) ###
+
         radius = (int)(1 + radius * self.CANVAS_WIDTH // 4)
 
         stroke_alpha_value = self.stroke_params[-1]
@@ -261,7 +265,7 @@ class Renderer():
         self.stroke_alpha_map = np.zeros_like(
             self.canvas, dtype=np.uint8) # uint8 for antialiasing
 
-        if abs(x0-x2) + abs(y0-y2) < 4: # too small, dont draw
+        if abs(x0-x3) + abs(y0-y3) < 4: # too small, dont draw ###
             self.foreground = np.array(self.foreground, dtype=np.float32) / 255.
             self.stroke_alpha_map = np.array(self.stroke_alpha_map, dtype=np.float32) / 255.
             self.canvas = self._update_canvas()
@@ -274,12 +278,12 @@ class Renderer():
         tmp = 1. / 100
         for i in range(100):
             t = i * tmp
-            x = (1 - t) * (1 - t) * x0 + 2 * t * (1 - t) * x1 + t * t * x2
-            y = (1 - t) * (1 - t) * y0 + 2 * t * (1 - t) * y1 + t * t * y2
+            x = (1 - t) * (1 - t) * (1 - t) * x0 + 3 * t * (1 - t) * (1 - t) * x1 + 3 * t * t * (1 - t) * x2 + t * t * t * x3 ###
+            y = (1 - t) * (1 - t) * (1 - t) * y0 + 3 * t * (1 - t) * (1 - t) * y1 + 3 * t * t * (1 - t) * y2 + t * t * t * y3 ###
 
             ptc = (x, y)
-            dx = 2 * (t - 1) * x0 + 2 * (1 - 2 * t) * x1 + 2 * t * x2
-            dy = 2 * (t - 1) * y0 + 2 * (1 - 2 * t) * y1 + 2 * t * y2
+            dx = 3 * (2 * t - t * t - 1) * x0 + 3 * (3 * t * t - 4 * t + 1) * x1 + 3 * (2 * t - 3 * t * t) * x2 + 3 * t * t * x3 ###
+            dy = 3 * (2 * t - t * t - 1) * y0 + 3 * (3 * t * t - 4 * t + 1) * y1 + 3 * (2 * t - 3 * t * t) * y2 + 3 * t * t * y3 ###
 
             theta = np.arctan2(dx, dy) - np.pi/2
             pt0 = utils.rotate_pt(pt=(x - radius, y - radius), rotate_center=ptc, theta=theta)
